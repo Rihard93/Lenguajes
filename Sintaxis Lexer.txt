@@ -11,20 +11,28 @@ OARITMETICOS = "+"|"-"|"*"|"/"|"%"|"**"|"<"|">"|"="
 OLOGICOS = "and"|"or"|"!"|"&&"|"||"
 FIN = ":"|";"
 TIPOS = "string"|"integer"|"float"|"boolean"|"array"|"object"|"NULL"|"resource"
+DOLAR = "$"
+PARENTESIS = "("|")"
+LLAVES = [\}\{]
+COMILLAS = [\"\']
+GBAJO = "_"
 %{
 public String analizar;
 %}
 %%
-{ESPACIO} {/*Ignore*/}
-{RESERVADAS} {return Palabra Reservada;}
-["$"]{C}+ {analizar=yytext(); return Variable;}
-[-+]{D}+ {analizar=yytext(); return Numero Entero;}
-[-+]{D}[./]{D}+ {analizar = yytext(); return Numero Real;}
-{OARITMETICOS} {return Operador Aritmetico;}
-{OLOGICOS} {return Operador Logico;}
-{FIN} {return Fin de Linea;}
-{"$"} {return Declaracion de Variable;}
-{TIPOS} {return Tipo de Variable}	
-{"_"}?{C}+{"_"}?{C}*{D}* { analizar=yytext(); return Variable;}
-{"define"}{"("}{"""}{C}+{"_"}?{C}*{D}*{"""}{","}?{ESPACIO}?{"""}{C}+{"_"}?{C}*{D}*{"""}{")"} {analizar=yytext(); return Constante;}
-{"_"}?{C}{D}*{"_"}?{C}*{D}* {analizar==yytext(); return Identificador;}
+{RESERVADAS} {return Palabra Reservada;} /*Si*/
+{DOLAR} {C}+ {analizar=yytext(); return Variable;} /*Si*/
+[-+]{D}+ {analizar=yytext(); return Numero Entero;} /*Si*/
+[-+]{D}[./]{D}+ {analizar = yytext(); return Numero Real;} /*Si*/
+{OARITMETICOS} {return Operador Aritmetico;} /*Si*/
+{OLOGICOS} {return Operador Logico;} /*Si*/
+{LLAVES} {return Llave} /*Si*/
+{DOLAR} {return Asignacion} /*Si*/
+{FIN} {return Fin de Linea;} /*Si*/
+{VAR} {return Declaracion de Variable;} /*Si*/
+{TIPOS} {return Tipo de Variable} /*Si*/	
+{GBAJO}? ({C}+|{GBAJO}?|{C}*|{D}*)+ { analizar=yytext(); return Variable;} /*Si*/
+"define" {PARENTESIS} ({COMILLAS}?|{PARENTESIS}|{COMA}|{C}+|{GBAJO}?|{C}*|{D}*|{ESPACIO}|{COMILLAS}?)+ {PARENTESIS} {analizar=yytext(); return Constante;} /*Si*/
+{RESERVADAS} {ESPACIO} {PARENTESIS} ({DOLAR}? {C}* {D}* {ESPACIO}? {OARITMETICOS}?)+ {PARENTESIS} {return IF;} /*Si*/
+"echo" {ESPACIO} {COMILLAS} ({ESPACIO}|{C}|{OARITMETICOS}|{D})+ {COMILLAS} {analizar=yytext(); return Mensaje;} /*Si*/
+
