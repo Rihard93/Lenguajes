@@ -1,0 +1,30 @@
+package analizadorphp;
+import static analizadorphp.Token.*;
+%%
+%class Lexer
+%type Token
+C = [a-zA-Z]
+D = [0-9]
+ESPACIO = [ \n\t\r]
+RESERVADAS = "__halt_compiler()"|"abstract"|"and"|"array()"|"as"|"break"|"callable"|"case"|"catch"|"class"|"clone"|"const"|"continue"|"declare"|"default"|"die()"|"do"|"echo"|"else"|"elseif"|"empty()"|"enddeclare"|"endfor"|"endforeach"|"endif"|"endswitch"|"endwhile"|"eval()"|"exit()"|"extends"|"final"|"finally"|"for"|"foreach"|"function"|"global"|"goto"|"if"|"implements"|"include"|"include_once"|"instanceof"|"insteadof"|"interface"|"isset()"|"list()"|"namespace"|"new"|"or"|"print"|"private"|"protected"|"public"|"require"|"require_once"|"return"|"static"|"switch"|"throw"|"trait"|"try"|"unset()"|"use"|"var"|"while"|"xor"|"yield"|"__CLASS__"|"__DIR__"|"__FILE__"|"__FUNCTION__"|"__LINE__"|"__METHOD__"|"__NAMESPACE__"|"__TRAIT__"
+OARITMETICOS = "+"|"-"|"*"|"/"|"%"|"**"|"<"|">"|"="
+OLOGICOS = "and"|"or"|"!"|"&&"|"||"
+FIN = ":"|";"
+TIPOS = "string"|"integer"|"float"|"boolean"|"array"|"object"|"NULL"|"resource"
+%{
+public String analizar;
+%}
+%%
+{ESPACIO} {/*Ignore*/}
+{RESERVADAS} {return Palabra Reservada;}
+["$"]{C}+ {analizar=yytext(); return Variable;}
+[-+]{D}+ {analizar=yytext(); return Numero Entero;}
+[-+]{D}[./]{D}+ {analizar = yytext(); return Numero Real;}
+{OARITMETICOS} {return Operador Aritmetico;}
+{OLOGICOS} {return Operador Logico;}
+{FIN} {return Fin de Linea;}
+{"$"} {return Declaracion de Variable;}
+{TIPOS} {return Tipo de Variable}	
+{"_"}?{C}+{"_"}?{C}*{D}* { analizar=yytext(); return Variable;}
+{"define"}{"("}{"""}{C}+{"_"}?{C}*{D}*{"""}{","}?{ESPACIO}?{"""}{C}+{"_"}?{C}*{D}*{"""}{")"} {analizar=yytext(); return Constante;}
+{"_"}?{C}{D}*{"_"}?{C}*{D}* {analizar==yytext(); return Identificador;}
