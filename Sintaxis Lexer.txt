@@ -13,26 +13,47 @@ FIN = ":"|";"
 TIPOS = "string"|"integer"|"float"|"boolean"|"array"|"object"|"NULL"|"resource"
 DOLAR = "$"
 PARENTESIS = "("|")"
-LLAVES = [\}\{]
+LLAVES = [\}\{\[\]]
 COMILLAS = [\"\']
 GBAJO = "_"
+VARPREDEF = "$GLOBALS"|"$_SERVER"|"$_GET"|"$_POST"|"$_FILES"|"$_REQUEST"|"$_SESSION"|"$_ENV"|"$_COOKIE"|"$php_errormsg"|"$HTTP_RAW_POST_DATA"|"$http_response_header"|"$argc"|"$argv"
 %{
 public String analizar;
 %}
 %%
+
+/* RESERVADAS - VARIABLES - NUMEROS REALES Y ENTEROS */
 {RESERVADAS} {return Palabra Reservada;} /*Si*/
 {DOLAR} {C}+ {analizar=yytext(); return Variable;} /*Si*/
 [-+]{D}+ {analizar=yytext(); return Numero Entero;} /*Si*/
-[-+]{D}[./]{D}+ {analizar = yytext(); return Numero Real;} /*Si*/
+[-+]{D}{"."|"/"}{D}+ {analizar = yytext(); return Numero Real;} /*Si*/
+
+/* OPERADOR LOGICO */
 {OARITMETICOS} {return Operador Aritmetico;} /*Si*/
+
+/* OPERADOR ARITMETICO */
 {OLOGICOS} {return Operador Logico;} /*Si*/
+
+/* ESTRUCTURA GENERAL - VARIABLES */
 {LLAVES} {return Llave} /*Si*/
+{PARENTESIS} {return PARENTESIS}
 {DOLAR} {return Asignacion} /*Si*/
 {FIN} {return Fin de Linea;} /*Si*/
-{VAR} {return Declaracion de Variable;} /*Si*/
+{DOLAR} {return Declaracion de Variable;} /*Si*/
 {TIPOS} {return Tipo de Variable} /*Si*/	
 {GBAJO}? ({C}+|{GBAJO}?|{C}*|{D}*)+ { analizar=yytext(); return Variable;} /*Si*/
-"define" {PARENTESIS} ({COMILLAS}?|{PARENTESIS}|{COMA}|{C}+|{GBAJO}?|{C}*|{D}*|{ESPACIO}|{COMILLAS}?)+ {PARENTESIS} {analizar=yytext(); return Constante;} /*Si*/
-{RESERVADAS} {ESPACIO} {PARENTESIS} ({DOLAR}? {C}* {D}* {ESPACIO}? {OARITMETICOS}?)+ {PARENTESIS} {return IF;} /*Si*/
-"echo" {ESPACIO} {COMILLAS} ({ESPACIO}|{C}|{OARITMETICOS}|{D})+ {COMILLAS} {analizar=yytext(); return Mensaje;} /*Si*/
 
+/* DEFINE */
+"define" {PARENTESIS} ({COMILLAS}?|{PARENTESIS}|{COMA}|{C}+|{GBAJO}?|{C}*|{D}*|{ESPACIO}|{COMILLAS}?)+ {PARENTESIS} {analizar=yytext(); return Constante;} /*Si*/
+
+/* ESTRUCTURAS DE CONTROL */
+{RESERVADAS} {ESPACIO} {PARENTESIS} ({DOLAR}?|{C}*|{D}*|{ESPACIO}?|{FIN}|{LLAVES}?|{VARPREDEF}|{RESERVADAS}|{OLOGICOS}|{OARITMETICOS}?)+ {PARENTESIS} {analizar=yytext(); return Estructura de Control;} /*Si*/
+{RESERVADAS} {ESPACIO} ({C}|{D}|{COMILLAS}|{FIN})+ {analizar=yytext(); return Estructura de Control;} /*Si*/
+{RESERVADAS} {LLAVES} {analizar=yytext(); return Estructura de Control;} /*Si*/
+{RESERVADAS} ({C}|{D})* {FIN} {analizar=yytext(); return Estructura de Control;} /*Si*/
+
+/*VARIABLES PREDETERMINADAS*/
+{VARPREDEF}{LLAVES}{COMILLAS} ({C}|{GBAJO})+ {COMILLAS}{LLAVES} {analizar=yytext(); return Variable Predeterminada;} /*Si*/
+
+/* MENSAJE */
+"echo" {ESPACIO} {COMILLAS} ({ESPACIO}|{C}|{OARITMETICOS}|{D})+ {COMILLAS} {analizar=yytext(); return Mensaje;} /*Si*/
