@@ -47,7 +47,7 @@ public String analizar;
 "define" {PARENTESIS} ({COMILLAS}?|{PARENTESIS}|{COMA}|{C}+|{GBAJO}?|{C}*|{D}*|{ESPACIO}|{COMILLAS}?)+ {PARENTESIS} {analizar=yytext(); return Constante;} /*Si*/
 
 /* ESTRUCTURAS DE CONTROL */
-{RESERVADAS} {ESPACIO} {PARENTESIS} ({DOLAR}?|{C}*|{D}*|{ESPACIO}?|{FIN}|{LLAVES}?|{VARPREDEF}|{RESERVADAS}|{OLOGICOS}|{OARITMETICOS}?)+ {PARENTESIS} {analizar=yytext(); return Estructura de Control;} /*Si*/
+{RESERVADAS} {ESPACIO} {PARENTESIS} ({DOLAR}?|{C}*|{D}*|{ESPACIO}?|{LLAVES}?|{VARPREDEF}|{RESERVADAS}|{OLOGICOS}|{OARITMETICOS}?)+ {PARENTESIS} {analizar=yytext(); return Estructura de Control;} /*Si*/
 {RESERVADAS} {ESPACIO} ({C}|{D}|{COMILLAS}|{FIN})+ {analizar=yytext(); return Estructura de Control;} /*Si*/
 {RESERVADAS} {LLAVES} {analizar=yytext(); return Estructura de Control;} /*Si*/
 {RESERVADAS} ({C}|{D})* {FIN} {analizar=yytext(); return Estructura de Control;} /*Si*/
@@ -57,3 +57,12 @@ public String analizar;
 
 /* MENSAJE */
 "echo" {ESPACIO} {COMILLAS} ({ESPACIO}|{C}|{OARITMETICOS}|{D})+ {COMILLAS} {analizar=yytext(); return Mensaje;} /*Si*/
+
+/*FUNCIONES */
+{RESERVADAS} {C}+ {PARENTESIS} ({DOLAR}?|{C}*|{D}*|{ESPACIO}?|{VARPREDEF}*|{RESERVADAS}*|{COMA})+ {PARENTESIS} {analizar=yytext(); return Funcion;} /*Si*/
+
+/* COMENTARIOS */
+{OARITMETICOS}? {OARITMETICOS}? {C}+ {OARITMETICOS}? {OARITMETICOS}? {analizar=yytext(); return Comentario;} /*Si*/
+
+/* ACCESO A BASE DE DATOS */
+{"$recordset"} {LLAVES} ({C}*|{GBAJO}*|{D}*)+ {LLAVES} {analizar=yytext(); return Base de Datos;}
