@@ -41,7 +41,7 @@ public String analizar;
 {DOLAR} {return Asignacion;} /*Si*/
 {FIN} {return Fin_de_Linea;} /*Si*/
 {TIPOS} {return Tipo_de_Variable;} /*Si*/	
-{GBAJO}? ({C}+|{GBAJO}?|{C}*|{D}*)+ { analizar=yytext(); return Variable;} /*Si*/
+{GBAJO}? ({C}|{GBAJO}|{D})+ { analizar=yytext(); return Variable;} /*Si*/
 
 /* DEFINE */
 "define" {PARENTESIS} ({COMILLAS}?|{PARENTESIS}|{COMA}|{C}+|{GBAJO}?|{C}*|{D}*|{ESPACIO}|{COMILLAS}?)+ {PARENTESIS} {analizar=yytext(); return Constante;} /*Si*/
