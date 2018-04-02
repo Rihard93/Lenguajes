@@ -18,7 +18,7 @@ public class miniphp {
     public static void main(String[] args) {
         // TODO code application logic here
         
-        String Ruta = "C:/Users/Ricardo/Documents/Lenguajes/miniphp/src/miniphp/MyRegEx.txt";
+        String Ruta = "C:/Users/Ricardo/Documents/Universidad/Lenguajes Formales y Automatas/2018/Proyecto #1/miniphp/src/miniphp/MyRegEx.txt";
         GenerarLexer(Ruta);
     }
     
