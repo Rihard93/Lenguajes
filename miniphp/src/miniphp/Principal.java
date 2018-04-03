@@ -4,8 +4,15 @@
  * and open the template in the editor.
  */
 package miniphp;
+import java.awt.Font;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import static javafx.scene.text.Font.font;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
@@ -38,6 +45,9 @@ public class Principal extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         txtRuta = new javax.swing.JTextField();
         btnAnalizar = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        txtInfo = new javax.swing.JTextArea();
+        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -63,6 +73,13 @@ public class Principal extends javax.swing.JFrame {
             }
         });
 
+        txtInfo.setColumns(20);
+        txtInfo.setRows(5);
+        jScrollPane1.setViewportView(txtInfo);
+
+        jLabel2.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        jLabel2.setText("Resultado Analizador Lexico");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -70,13 +87,20 @@ public class Principal extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnCarga, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(18, 18, 18)
-                        .addComponent(txtRuta))
-                    .addComponent(btnAnalizar, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
-                .addContainerGap())
+                        .addGap(6, 6, 6)
+                        .addComponent(jLabel2)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jScrollPane1)
+                            .addComponent(btnCarga, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addGap(18, 18, 18)
+                                .addComponent(txtRuta))
+                            .addComponent(btnAnalizar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE))
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -89,7 +113,11 @@ public class Principal extends javax.swing.JFrame {
                 .addComponent(btnCarga)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnAnalizar)
-                .addContainerGap(178, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         pack();
@@ -100,8 +128,8 @@ public class Principal extends javax.swing.JFrame {
         
         String Direccion = System.getProperty("user.home");
         JFileChooser Seleccionar = new JFileChooser(Direccion + "/Desktop");
-        Seleccionar.addChoosableFileFilter(new FileNameExtensionFilter("Archivo de Texto (.txt)", "txt"));
         Seleccionar.addChoosableFileFilter(new FileNameExtensionFilter("Archivo de Texto (.php)", "php"));
+        Seleccionar.addChoosableFileFilter(new FileNameExtensionFilter("Archivo de Texto (.txt)", "txt"));        
         Seleccionar.setAcceptAllFileFilterUsed(false);
         Seleccionar.showDialog(this,"Seleccionar");
         Entrada = Seleccionar.getSelectedFile();
@@ -111,8 +139,52 @@ public class Principal extends javax.swing.JFrame {
 
     private void btnAnalizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAnalizarActionPerformed
         // TODO add your handling code here:
+        
+        try
+        {
+            AnalizarArchivo();
+        }
+        catch(IOException ex)
+        {
+            JOptionPane.showMessageDialog(this,ex.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnAnalizarActionPerformed
 
+    public void AnalizarArchivo() throws IOException
+    {
+        FileInputStream Leer = new FileInputStream(Ruta);   
+        Reader Lector = new InputStreamReader(Leer);
+        Lexer lexer = new Lexer(Lector);
+        String Resultado = "";
+        
+        while(true)
+        {
+            
+            Token token = lexer.yylex();
+            
+            if (token == null)
+            {
+                Resultado = Resultado + "Fin del Archivo";
+                Resultado = Resultado.replaceAll("_", " ");
+                txtInfo.setText(Resultado); // Se muestran todos los resultados obtenidos
+                return;
+            }
+            
+            switch (token)
+            {
+                case ERROR:
+                    Resultado = Resultado + lexer.analizar + " - Error: El simbolo no coincide \n";
+                    break;
+                    
+                default:
+
+                    Resultado = Resultado + lexer.analizar + " - Token: "+token+"\n";
+                    break;
+            }
+           
+        }
+    }
+    
     /**
      * @param args the command line arguments
      */
@@ -152,6 +224,9 @@ public class Principal extends javax.swing.JFrame {
     private javax.swing.JButton btnAnalizar;
     private javax.swing.JButton btnCarga;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextArea txtInfo;
     private javax.swing.JTextField txtRuta;
     // End of variables declaration//GEN-END:variables
 }

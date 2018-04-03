@@ -22,26 +22,27 @@ VARPREDEF = "$GLOBALS"|"$_SERVER"|"$_GET"|"$_POST"|"$_FILES"|"$_REQUEST"|"$_SESS
 public String analizar;
 %}
 %%
-
-/* RESERVADAS - VARIABLES - NUMEROS REALES Y ENTEROS */
-{RESERVADAS} {return Palabra_Reservada;} /*Si*/
+{ESPACIO} {/*Ignore*/}
+/* RESERVADAS - VARIABLES - ESTRUCTURA - NUMEROS REALES Y ENTEROS */
+{RESERVADAS} {analizar=yytext(); return Palabra_Reservada;} /*Si*/
 {DOLAR} {C}+ {analizar=yytext(); return Variable;} /*Si*/
-[-+]{D}+ {analizar=yytext(); return Numero_Entero;} /*Si*/
-[-+]{D}[.|/]{D}+ {analizar=yytext(); return Numero_Real;} /*Si*/
+[-+]? {D}+ {analizar=yytext(); return Numero_Entero;} /*Si*/
+[-+]? {D}+ "." {D}+ {analizar=yytext(); return Numero_Real;} /*Si*/
+[-+]? {D}+ "/" {D}+ {analizar=yytext(); return Numero_Real;} /*Si*/
 
 /* OPERADOR LOGICO */
-{OARITMETICOS} {return Operador_Aritmetico;} /*Si*/
+{OARITMETICOS} {analizar=yytext(); return Operador_Aritmetico;} /*Si*/
 
 /* OPERADOR ARITMETICO */
-{OLOGICOS} {return Operador_Logico;} /*Si*/
+{OLOGICOS} {analizar=yytext(); return Operador_Logico;} /*Si*/
 
 /* ESTRUCTURA GENERAL - VARIABLES */
-{LLAVES} {return Llave;} /*Si*/
-{PARENTESIS} {return Parentesis;}
-{DOLAR} {return Asignacion;} /*Si*/
-{FIN} {return Fin_de_Linea;} /*Si*/
-{TIPOS} {return Tipo_de_Variable;} /*Si*/	
-{GBAJO}? ({C}|{GBAJO}|{D})+ { analizar=yytext(); return Variable;} /*Si*/
+{LLAVES} {analizar=yytext(); return Llave;} /*Si*/
+{PARENTESIS} {analizar=yytext(); return Parentesis;}
+{DOLAR} {analizar=yytext(); return Asignacion;} /*Si*/
+{FIN} {analizar=yytext(); return Fin_de_Linea;} /*Si*/
+{TIPOS} {analizar=yytext(); return Tipo_de_Variable;} /*Si*/	
+{GBAJO}? ({C}|{GBAJO}|{D}|{ESPACIO}|{COMILLAS})+ { analizar=yytext(); return Variable;} /*Si*/
 
 /* DEFINE */
 "define" {PARENTESIS} ({COMILLAS}?|{PARENTESIS}|{COMA}|{C}+|{GBAJO}?|{C}*|{D}*|{ESPACIO}|{COMILLAS}?)+ {PARENTESIS} {analizar=yytext(); return Constante;} /*Si*/
@@ -62,10 +63,10 @@ public String analizar;
 {RESERVADAS} {C}+ {PARENTESIS} ({DOLAR}?|{C}*|{D}*|{ESPACIO}?|{VARPREDEF}*|{RESERVADAS}*|{COMA})+ {PARENTESIS} {analizar=yytext(); return Funcion;} /*Si*/
 
 /* COMENTARIOS */
-{OARITMETICOS}? {OARITMETICOS}? {C}+ {OARITMETICOS}? {OARITMETICOS}? {analizar=yytext(); return Comentario;} /*Si*/
+"/" "*" ({C}|{ESPACIO})+ "*" "/" {analizar=yytext(); return Comentario;} /*Si*/
 
 /* ACCESO A BASE DE DATOS */
 "$recordset" {LLAVES} ({C}+|{GBAJO}*|{D}*)+ {LLAVES} {analizar=yytext(); return Base_de_Datos;}
 
 /* ERROR */
-. {return ERROR;}
+. {analizar=yytext(); return ERROR;}
