@@ -73,6 +73,7 @@ public class Principal extends javax.swing.JFrame {
 
         txtInfo.setColumns(20);
         txtInfo.setRows(5);
+        txtInfo.setEnabled(false);
         jScrollPane1.setViewportView(txtInfo);
 
         jLabel2.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
@@ -154,16 +155,23 @@ public class Principal extends javax.swing.JFrame {
         Reader Lector = new InputStreamReader(Leer);
         Lexer lexer = new Lexer(Lector);
         String Resultado = "";
+        int ContadorError = 0;
+        boolean Error = false;
         
-        while(true)
+         while(true)
         {
             
             Token token = lexer.yylex();
             
             if (token == null)
             {
+                if (ContadorError > 0)
+                {
+                    Error = true;
+                }
                 Resultado = Resultado + "Fin del Archivo";
-                Resultado = Resultado.replaceAll("_", " ");
+                //Resultado = Resultado.replaceAll("_", " ");
+                Archivos(Error,Resultado);
                 txtInfo.setText(Resultado); // Se muestran todos los resultados obtenidos
                 return;
             }
@@ -172,6 +180,7 @@ public class Principal extends javax.swing.JFrame {
             {
                 case ERROR:
                     Resultado = Resultado + lexer.analizar + " - Error: El simbolo no coincide \n";
+                    ContadorError++;
                     break;
                     
                 default:
@@ -181,6 +190,18 @@ public class Principal extends javax.swing.JFrame {
             }
            
         }
+    }
+    
+    public void Archivos(boolean error, String errores) throws IOException
+    {
+        File Archivo = new File(Ruta);
+        String Ruta1,Ruta2;
+                
+        Ruta1 = Ruta.substring(0, Ruta.length()-3);
+        Ruta1 = Ruta1 + "out";
+        
+        Ruta2 = Archivo.getParent();
+        Ruta2 = Ruta2 + "\\errores.txt";
     }
     
     /**
