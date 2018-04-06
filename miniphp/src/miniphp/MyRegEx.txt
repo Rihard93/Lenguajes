@@ -7,8 +7,8 @@ C = [a-zA-Z]
 D = [0-9]
 ESPACIO = [ \n\t\r]
 RESERVADAS = "__halt_compiler()"|"abstract"|"and"|"array()"|"as"|"break"|"callable"|"case"|"catch"|"class"|"clone"|"const"|"continue"|"declare"|"default"|"die()"|"do"|"echo"|"else"|"elseif"|"empty()"|"enddeclare"|"endfor"|"endforeach"|"endif"|"endswitch"|"endwhile"|"eval()"|"exit()"|"extends"|"final"|"finally"|"for"|"foreach"|"function"|"global"|"goto"|"if"|"implements"|"include"|"include_once"|"instanceof"|"insteadof"|"interface"|"isset()"|"list()"|"namespace"|"new"|"or"|"print"|"private"|"protected"|"public"|"require"|"require_once"|"return"|"static"|"switch"|"throw"|"time()"|"trait"|"try"|"unset()"|"use"|"var"|"while"|"xor"|"yield"|"__CLASS__"|"__DIR__"|"__FILE__"|"__FUNCTION__"|"__LINE__"|"__METHOD__"|"__NAMESPACE__"|"__TRAIT__"
-OARITMETICOS = "+"|"-"|"*"|"/"|"%"|"**"|"<"|">"|"="
-OLOGICOS = "and"|"or"|"!"|"&&"|"||"
+OARITMETICOS = "+"|"-"|"*"|"/"|"%"|"**"|"<"|">"|"="|"\\"|"&"|"|"
+OLOGICOS = "and"|"or"|"!"|"&&"|"||"|"?"|"#"
 FIN = ":"|";"|"."
 TIPOS = "string"|"integer"|"float"|"boolean"|"array"|"object"|"NULL"|"resource"
 DOLAR = "$"
@@ -24,9 +24,17 @@ public String analizar;
 %}
 %%
 {ESPACIO} {/*Ignore*/}
+
+/* ERRORES DE DECLARACION */
+{DOLAR} {D} ({C}|{D})+ {analizar=yytext(); return ERROR;}
+"=" {D} ({C}|{D})+ {analizar=yytext(); return ERROR;}
+{DOLAR} ({C}|{D}|{GBAJO})+ {DOLAR}  {analizar=yytext(); return ERROR;}
+"=" "!" "=" {analizar=yytext(); return ERROR;}
+"/*" {ESPACIO}+ {C}+  {analizar=yytext(); return ERROR;}
+
 /* RESERVADAS - VARIABLES - ESTRUCTURA - NUMEROS REALES Y ENTEROS */
 {RESERVADAS} {analizar=yytext(); return Palabra_Reservada;} /*Si*/
-{DOLAR} {C}+ {analizar=yytext(); return Variable;} /*Si*/
+{DOLAR} {C}+({C}|{D}) {analizar=yytext(); return Variable;} /*Si*/
 [-+]? {D}+ {analizar=yytext(); return Numero_Entero;} /*Si*/
 [-+]? {D}+ "." {D}+ {analizar=yytext(); return Numero_Real;} /*Si*/
 [-+]? {D}+ "/" {D}+ {analizar=yytext(); return Numero_Real;} /*Si*/
@@ -48,16 +56,16 @@ public String analizar;
 {COMILLAS} {analizar=yytext(); return Comillas;} /*Si*/
 {VARPREDEF} {analizar=yytext(); return Variable_Predeterminada;} /*Si*/	
 {VARPHP} {analizar=yytext(); return Tags_PHP;}
-{GBAJO}? ({C}+ | {GBAJO}+ | {D}* | {COMILLAS}* )+ { analizar=yytext(); return Variable;} /*Si*/
+{GBAJO}? {C}+ ({C}|{D}| {GBAJO}+ |{COMILLAS}* )+ { analizar=yytext(); return Variable;} /*Si*/
 
 /* DEFINE */
 "define" {PARENTESIS} ({COMILLAS}?|{PARENTESIS}|{COMA}|{C}+|{GBAJO}?|{D}|{ESPACIO}|{COMILLAS}?)+ {PARENTESIS} {analizar=yytext(); return Constante;} /*Si*/
 
 /* ESTRUCTURAS DE CONTROL */
-{RESERVADAS} {ESPACIO}? {PARENTESIS} ({DOLAR}|{C}|{D}|{ESPACIO}|{LLAVES}|{VARPREDEF}|{RESERVADAS}|{OLOGICOS}|{OARITMETICOS})+ {PARENTESIS} {analizar=yytext(); return Estructura_de_Control;} /*Si*/
-{RESERVADAS} {ESPACIO}? ({C}|{D}|{COMILLAS})+ {FIN} {analizar=yytext(); return Estructura_de_Control;} /*Si*/
+{RESERVADAS} {ESPACIO}? {PARENTESIS} ({DOLAR}|{C}+{D}|{ESPACIO}|{LLAVES}|{VARPREDEF}|{RESERVADAS}|{OLOGICOS}|{OARITMETICOS})+ {PARENTESIS} {analizar=yytext(); return Estructura_de_Control;} /*Si*/
+{RESERVADAS} {ESPACIO}? ({C}+{D}|{COMILLAS})+ {FIN} {analizar=yytext(); return Estructura_de_Control;} /*Si*/
 {RESERVADAS} {LLAVES} {analizar=yytext(); return Estructura_de_Control;} /*Si*/
-"return" ({C}|{D}|{ESPACIO}|{COMILLAS}|{DOLAR})* {FIN} {analizar=yytext(); return Estructura_de_Control;} /*Si*/
+"return" ({C}+{D}|{ESPACIO}|{COMILLAS}|{DOLAR})* {FIN} {analizar=yytext(); return Estructura_de_Control;} /*Si*/
 "exit" {FIN} {analizar=yytext(); return Estructura_de_Control;} /*Si*/
 
 /*VARIABLES PREDETERMINADAS*/
@@ -67,10 +75,10 @@ public String analizar;
 "echo" {ESPACIO} {COMILLAS} ({ESPACIO}|{C}|{OARITMETICOS}|{D})+ {COMILLAS} {FIN} {analizar=yytext(); return Mensaje;} /*Si*/
 
 /*FUNCIONES */
-{RESERVADAS}? {ESPACIO}? {C}+ {ESPACIO}? {PARENTESIS} ({DOLAR}|{C}|{D}|{ESPACIO}|{LLAVES}{C}*{D}*{LLAVES}|{VARPREDEF}|{RESERVADAS}|{COMA}|{COMILLAS}|{OARITMETICOS}|{OLOGICOS})* {PARENTESIS} {FIN}? {analizar=yytext(); return Funcion;} /*Si*/
+{RESERVADAS}? {ESPACIO}? {C}+ {ESPACIO}? {PARENTESIS} ({DOLAR}|{C}+{D}|{ESPACIO}|{LLAVES}{C}*{D}*{LLAVES}|{VARPREDEF}|{RESERVADAS}|{COMA}|{COMILLAS}|{OARITMETICOS}|{OLOGICOS})* {PARENTESIS} {FIN}? {analizar=yytext(); return Funcion;} /*Si*/
 
 /* COMENTARIOS */
-"/" "*" ({C}|{ESPACIO})+ "*" "/" {analizar=yytext(); return Comentario;} /*Si*/
+"/*" [^*] ~"*/" {analizar=yytext(); return Comentario;} /*Si*/
 "//" ({C}|{ESPACIO})+  {analizar=yytext(); return Comentario;} /*Si*/
 "#" ({C}|{ESPACIO})+  {analizar=yytext(); return Comentario;} /*Si*/
 

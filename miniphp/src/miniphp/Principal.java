@@ -273,6 +273,7 @@ public class Principal extends javax.swing.JFrame {
             BufferedReader R  = new BufferedReader(L);
             String Linea;
             FileWriter AS = new FileWriter(Ruta1);
+            int i;
             while (true)
             {
                 Linea = R.readLine();
@@ -282,10 +283,18 @@ public class Principal extends javax.swing.JFrame {
                     break;
                 }
                 
-                if(Linea.contains("$recordset"))
+                if(Linea.contains("["))
                 {
-                    String Alterna = Linea.substring(0,10);
-                    Linea = Linea.substring(10).toUpperCase();
+                    for (i=0;i<Linea.length();i++)
+                    {
+                        if(Character.toString(Linea.charAt(i)).equals("["))
+                        {
+                            break;
+                        }
+                        
+                    }
+                    String Alterna = Linea.substring(0,i+1);
+                    Linea = Linea.substring(i+1).toUpperCase();
                     AS.write(Alterna + Linea + "\n");                    
                 }
                 else
