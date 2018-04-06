@@ -4,11 +4,16 @@
  * and open the template in the editor.
  */
 package miniphp;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -20,7 +25,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class Principal extends javax.swing.JFrame {
     
     public File Entrada,S1,S2;
-    public String Ruta;
+    public String Ruta,Ruta1,Ruta2;
+    Reader Lector;
     
     
     /**
@@ -151,8 +157,9 @@ public class Principal extends javax.swing.JFrame {
 
     public void AnalizarArchivo() throws IOException
     {
+        Formato(Ruta);
         FileInputStream Leer = new FileInputStream(Ruta);   
-        Reader Lector = new InputStreamReader(Leer);
+        Lector = new InputStreamReader(Leer);        
         Lexer lexer = new Lexer(Lector);
         String Resultado = "";
         int ContadorError = 0;
@@ -169,10 +176,10 @@ public class Principal extends javax.swing.JFrame {
                 {
                     Error = true;
                 }
-                Resultado = Resultado + "Fin del Archivo";
-                //Resultado = Resultado.replaceAll("_", " ");
-                Archivos(Error,Resultado);
+                Resultado = Resultado + "Fin del Archivo";                
+                /* Poner otro metodo*/
                 txtInfo.setText(Resultado); // Se muestran todos los resultados obtenidos
+                Finalizar(Error,Resultado);
                 return;
             }
             
@@ -184,24 +191,111 @@ public class Principal extends javax.swing.JFrame {
                     break;
                     
                 default:
-
-                    Resultado = Resultado + lexer.analizar + " - Token: "+token+"\n";
+                    //Resultado = Resultado + lexer.analizar + " - Token: "+token+"\n";
                     break;
             }
            
         }
     }
     
-    public void Archivos(boolean error, String errores) throws IOException
+    public void Archivos() throws IOException
     {
-        File Archivo = new File(Ruta);
-        String Ruta1,Ruta2;
-                
+          
         Ruta1 = Ruta.substring(0, Ruta.length()-3);
         Ruta1 = Ruta1 + "out";
+
+    }
+    
+    public void Formato(String Ruta) throws IOException
+    {
+        Archivos();        
+        File ATemp = new File (Ruta1);
         
-        Ruta2 = Archivo.getParent();
-        Ruta2 = Ruta2 + "\\errores.txt";
+        FileReader N1 = new FileReader(Ruta);        
+        BufferedReader L = new BufferedReader(N1);
+        
+        FileWriter Temp = new FileWriter(Ruta1);
+
+        String Linea = "";
+        
+        
+        while(true)
+        {
+            Linea = L.readLine();
+            if(Linea == null)
+            {
+                Temp.close();
+                break;
+            }
+            Linea = Linea.toLowerCase() + "\n";
+            Temp.write(Linea);
+            
+        }        
+        
+        FileReader N2 = new FileReader(ATemp);
+        BufferedReader LT = new BufferedReader(N2);
+        FileWriter Nuevo = new FileWriter(Ruta);        
+        while(true)
+        {
+            Linea = LT.readLine();
+            if (Linea == null)
+            {
+                Nuevo.close();
+                LT.close();
+                break;
+            }
+            
+            Nuevo.write(Linea + "\n");
+            
+        }        
+        Files.deleteIfExists(Paths.get(Ruta1));
+        
+        
+        
+    }
+    
+    public void Finalizar(boolean Cond, String Resultado) throws IOException
+    {
+        File S = new File(Ruta1); //Se crea el archivo .out
+        Ruta2 = S.getParent();
+        Ruta2 = Ruta2 + "\\errores.txt"; //Se crea el archivo de errores
+        File ERR = new File(Ruta2);
+        if (Cond == true)
+        {
+            FileWriter E = new FileWriter(ERR);
+            E.write(Resultado);
+            E.close();
+            Files.deleteIfExists(Paths.get(Ruta1));
+        }
+        else
+        {
+            FileReader L = new FileReader(Ruta);
+            BufferedReader R  = new BufferedReader(L);
+            String Linea;
+            FileWriter AS = new FileWriter(Ruta1);
+            while (true)
+            {
+                Linea = R.readLine();
+                if(Linea ==  null)
+                {
+                    AS.close();
+                    break;
+                }
+                
+                if(Linea.contains("$recordset"))
+                {
+                    String Alterna = Linea.substring(0,10);
+                    Linea = Linea.substring(10).toUpperCase();
+                    AS.write(Alterna + Linea + "\n");                    
+                }
+                else
+                {
+                    Linea = Linea.toLowerCase();
+                    AS.write(Linea + "\n");
+                }
+            }
+            
+        }
     }
     
     /**
